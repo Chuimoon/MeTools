@@ -1,6 +1,9 @@
 # coding: utf-8
 '''
-Describe
+Meteorology Tools
+
+Prg created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
+Doc Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
 
 '''
 import numpy as np
@@ -112,7 +115,24 @@ def AnnualArray(arr):
 
 def Corref(x,y):
     '''
-    Return a correlation coefficient of 2 one-dimension data series.
+    This function will return a correlation coefficient of 2 one-dimension series.
+
+    Parameters
+    ----------
+    x : a one-dimension list or ndarray
+        The first series.
+    y : a one-dimension list or ndarray
+        The second series.
+
+    Returns
+    -------
+    coef : a float number
+        The linear correlation coefficient
+
+    Log
+    ---
+    Prg Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
+    Doc Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
     '''
     try:
         int(np.corrcoef(x,y)[0,1])
@@ -121,24 +141,56 @@ def Corref(x,y):
     else:
         return np.corrcoef(x,y)[0,1]
 
-def ClipTibet(ctrf,ax):
-    shpfile = 'D:/Dropbox/Research/CloudAboveTibet/Basemaps/TibetPlateau/DBATP_Polygon'
-    sf = shapefile.Reader(shpfile)
-    for shape_rec in sf.shapeRecords():
-        vertices = []
-        codes = []
-        pts = shape_rec.shape.points
-        prt = list(shape_rec.shape.parts) + [len(pts)]
-        for i in range(len(prt) - 1):
-            for j in range(prt[i], prt[i+1]):
-                vertices.append((pts[j][0], pts[j][1]))
-            codes += [Path.MOVETO]
-            codes += [Path.LINETO] * (prt[i+1] - prt[i] -2)
-            codes += [Path.CLOSEPOLY]
-        clip = Path(vertices, codes)
-        clip = PathPatch(clip, transform=ax.transData)
-    for contour in ctrf.collections:
-        contour.set_clip_path(clip)
+
+def ClipBoundary(ctrf,ax,region='China'):
+    '''
+    This function will clip contourf obj inside a boundary that from a shapefile.
+    '''
+
+    existing_regions = os.listdir('./shpfiles/')
+    if region in existing_regions:
+        shpfile = './shpfiles/'+region+'/boundary'
+    else:
+        print 'ERROR: We don\'t have %s\'s shapefile.' % region
+        return False
+
+    if region == 'TibetPlateau':
+        sf = shapefile.Reader(shpfile)
+        for shape_rec in sf.shapeRecords():
+            vertices = []
+            codes = []
+            pts = shape_rec.shape.points
+            prt = list(shape_rec.shape.parts) + [len(pts)]
+            for i in range(len(prt) - 1):
+                for j in range(prt[i], prt[i+1]):
+                    vertices.append((pts[j][0], pts[j][1]))
+                codes += [Path.MOVETO]
+                codes += [Path.LINETO] * (prt[i+1] - prt[i] -2)
+                codes += [Path.CLOSEPOLY]
+            clip = Path(vertices, codes)
+            clip = PathPatch(clip, transform=ax.transData)
+        for contour in ctrf.collections:
+            contour.set_clip_path(clip)
+    elif region == 'China':
+        sf = shapefile.Reader(shpfile)
+        for shape_rec in sf.shapeRecords():
+            if shape_rec.record[3] == region:  ####这里需要找到和region匹配的唯一标识符，record[]中必有一项是对应的。
+                vertices = []
+                codes = []
+                pts = shape_rec.shape.points
+                prt = list(shape_rec.shape.parts) + [len(pts)]
+                for i in range(len(prt) - 1):
+                    for j in range(prt[i], prt[i+1]):
+                        vertices.append((pts[j][0], pts[j][1]))
+                    codes += [Path.MOVETO]
+                    codes += [Path.LINETO] * (prt[i+1] - prt[i] -2)
+                    codes += [Path.CLOSEPOLY]
+                clip = Path(vertices, codes)
+                clip = PathPatch(clip, transform=ax.transData)
+        for contour in ctrf.collections:
+            contour.set_clip_path(clip)
+
+    return True
 
 def ClipChina(ctrf,ax):
     region='China'
@@ -688,6 +740,3 @@ def DrawClipScatter(ax,lon,lat,sizes=20,color='b',alpha=1):
     sct = ax.scatter(lons,lats,s=sizes,color=color,alpha=alpha)
 
     sct.set_clip_path(clip)
-
-
-ncmap = AdjustColormap(plt.cm.RdYlBu,0.2,0.8)
