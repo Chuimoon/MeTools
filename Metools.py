@@ -20,7 +20,7 @@ months = ['Jan.','Feb.','Mar.','Apr.','May','Jun.','Jul.','Aug.','Sep.','Oct.','
 
 def AdjustColormap(cmap, minval=0.0, maxval=1.0, n=100):
     '''
-    This function can intercept an existing colormap. 
+    This function can intercept an existing colormap and return a new colormap objection. 
 
     Parameters
     ----------
@@ -36,6 +36,11 @@ def AdjustColormap(cmap, minval=0.0, maxval=1.0, n=100):
     Returns
     -------
     new_cmap : a cmap objection
+
+    Log
+    ---
+    Prg Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
+    Doc Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
     '''
     new_cmap = colors.LinearSegmentedColormap.from_list(
         'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
@@ -44,12 +49,63 @@ def AdjustColormap(cmap, minval=0.0, maxval=1.0, n=100):
 
 
 def AreaMean(arr):
+    '''
+    This function can return an area mean list from a three dimension array.
+
+    Parameters
+    ----------
+    arr : a 3-D ndarray
+        It is a three dimension numpy array whose first dimension is time.
+
+    Returns
+    -------
+    result : a 1-D ndarray
+        It is a one dimension numpy array of area mean.
+
+    Log
+    ---
+    Prg Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
+    Doc Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
+    '''
     return np.array(np.mean(np.mean(arr,axis=1),axis=1))
 
-def AnnualArray(value):
-    array = np.full((16,value.shape[1],value.shape[2]),-9999.)
-    for n in xrange(16):
-        array[n] = np.mean(value[12*n:12*n+12],axis=0)
+def AnnualArray(arr):
+    '''
+    This function will calculate annual mean values of the input 3-D array.
+
+    Parameters
+    ----------
+    arr : a 3-D ndarray
+        It is a three dimension numpy array whose first dimension is time.
+
+    Returns
+    -------
+    array : a 3-D ndarray
+        It is a three dimension numpy array of annual mean.
+
+    Examples
+    --------
+    Here is an array stand for global(lat,lon) temperature of 192 months: 
+    In [1] : temp.shape
+    Out [1] : (192, 180, 360)
+    
+    In [2] : annual_array = AnnualArray(temp)
+
+    In [3] : annual_array.shape
+    Out [3] : (16, 180, 360)
+
+    The codes above calculated mean values of every 12 month, the result's
+    time dimension means 16 years(192/12).
+
+    Log
+    ---
+    Prg Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
+    Doc Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
+    '''
+    lenth = arr.shape[0] / 12
+    array = np.full((lenth,arr.shape[1],arr.shape[2]),-9999.)
+    for n in xrange(lenth):
+        array[n] = np.mean(arr[12*n:12*n+12],axis=0)
         
     return array  
 
