@@ -22,7 +22,7 @@ import scipy.ndimage
 months = ['Jan.','Feb.','Mar.','Apr.','May','Jun.','Jul.','Aug.','Sep.','Oct.','Nov.','Dec.']
 
 def AdjustColormap(cmap, minval=0.0, maxval=1.0, n=100):
-    '''
+    u'''
     This function can intercept an existing colormap and return a new colormap objection. 
 
     Parameters
@@ -40,10 +40,6 @@ def AdjustColormap(cmap, minval=0.0, maxval=1.0, n=100):
     -------
     new_cmap : a cmap objection
 
-    Log
-    ---
-    Prg Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
-    Doc Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
     '''
     new_cmap = colors.LinearSegmentedColormap.from_list(
         'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
@@ -52,65 +48,58 @@ def AdjustColormap(cmap, minval=0.0, maxval=1.0, n=100):
 
 
 def AreaMean(arr):
-    '''
-    This function can return an area mean list from a three dimension array.
+    u'''
+    该函数用于将一个三维数组计算得到一个一维的区域平均数组。
 
-    Parameters
-    ----------
-    arr : a 3-D ndarray
-        It is a three dimension numpy array whose first dimension is time.
+    输入参数
+    --------
+    arr : 三维数组
+        该数组为待处理的原始三维数组，其第一维须为时间维，类型须为ndarray（numpy数组）。
 
-    Returns
+    返回值
     -------
-    result : a 1-D ndarray
-        It is a one dimension numpy array of area mean.
+    result : 一维数组
+        该数组为经过计算后得到的一维区域平均数组
 
-    Log
-    ---
-    Prg Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
-    Doc Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
     '''
     return np.array(np.mean(np.mean(arr,axis=1),axis=1))
 
-def AnnualArray(arr):
-    '''
-    This function will calculate annual mean values of the input 3-D array.
+def AnnualMeanArray(arr):
+    u'''
+    该函数用于计算三维数组的年平均值
 
-    Parameters
-    ----------
-    arr : a 3-D ndarray
-        It is a three dimension numpy array whose first dimension is time.
-
-    Returns
-    -------
-    array : a 3-D ndarray
-        It is a three dimension numpy array of annual mean.
-
-    Examples
+    输入参数
     --------
-    Here is an array stand for global(lat,lon) temperature of 192 months: 
+    arr : 三维数组
+        该数组为待处理的原始三维数组，其第一维须为时间维（逐月），类型须为ndarray（numpy数组）。
+        该函数默认arr数组时间维的首值为某年一月，若首值不是一月，请不要直接使用本函数，须预先将
+        输入数组处理为首值为一月方可使用本函数，末值无限制，但若最后一年非完整年，则按照已有的月
+        份做相应的平均，与完整年的结果会有偏差。
+
+    返回值
+    ------
+    ann_arr : 三维数组
+        该数组为经过计算后得到的年平均三维数组，其时间维缩短为逐年值，类型仍为ndarray（numpy数组）
+
+    示例
+    ----
+    示例数据为16年192个月的温度数据（temp），其维度分布为 (月份:192, 纬度:180, 经度:360)：
     In [1] : temp.shape
     Out [1] : (192, 180, 360)
     
-    In [2] : annual_array = AnnualArray(temp)
+    使用本函数计算得到年平均数组
+    In [2] : annual_mean_array = AnnualMeanArray(temp)
 
-    In [3] : annual_array.shape
+    年平均数组的时间维降为16，即16年（192/12=16)
+    In [3] : annual_mean_array.shape
     Out [3] : (16, 180, 360)
-
-    The codes above calculated mean values of every 12 month, the result's
-    time dimension means 16 years(192/12).
-
-    Log
-    ---
-    Prg Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
-    Doc Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
     '''
     lenth = arr.shape[0] / 12
-    array = np.full((lenth,arr.shape[1],arr.shape[2]),-9999.)
+    ann_arr = np.full((lenth,arr.shape[1],arr.shape[2]),-9999.)
     for n in xrange(lenth):
-        array[n] = np.mean(arr[12*n:12*n+12],axis=0)
+        ann_arr[n] = np.mean(arr[12*n:12*n+12],axis=0)
         
-    return array  
+    return ann_arr  
 
 
 def Corref(x,y):
