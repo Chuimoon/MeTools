@@ -152,8 +152,8 @@ def ClipBoundary(ctrf,ax,region='China'):
     if region in existing_regions:
         shpfile = './shpfiles/'+region+'/boundary'
     else:
-        print 'ERROR: We don\'t have %s\'s shapefile.' % region
-        return False
+        print u'错误：边界数据缺失'
+        exit()
 
     if region == 'TibetPlateau':
         sf = shapefile.Reader(shpfile)
@@ -191,180 +191,41 @@ def ClipBoundary(ctrf,ax,region='China'):
         for contour in ctrf.collections:
             contour.set_clip_path(clip)
 
-    return True
-
-def ClipChina(ctrf,ax):
-    region='China'
-    shpfile = 'D:/Dropbox/Research/CloudAboveTibet/Basemaps/China/country1'
-    sf = shapefile.Reader(shpfile)
-    for shape_rec in sf.shapeRecords():
-        if shape_rec.record[3] == region:  ####这里需要找到和region匹配的唯一标识符，record[]中必有一项是对应的。
-            vertices = []
-            codes = []
-            pts = shape_rec.shape.points
-            prt = list(shape_rec.shape.parts) + [len(pts)]
-            for i in range(len(prt) - 1):
-                for j in range(prt[i], prt[i+1]):
-                    vertices.append((pts[j][0], pts[j][1]))
-                codes += [Path.MOVETO]
-                codes += [Path.LINETO] * (prt[i+1] - prt[i] -2)
-                codes += [Path.CLOSEPOLY]
-            clip = Path(vertices, codes)
-            clip = PathPatch(clip, transform=ax.transData)
-    for contour in ctrf.collections:
-        contour.set_clip_path(clip)
-
     return clip
 
-def Datasetize(value,region,valuename,lon,lat):
-    Series = AreaMean(SelectRegion(value,region,lon,lat))
 
-    year = []
-    season = []
-    month = []
-    for yyyy in xrange(2001,2017):
-        for mm in xrange(1,13):
-            year.append(yyyy)
-            month.append(mm)
-            if mm in [3,4,5]:
-                season.append('spring')
-            elif mm in [6,7,8]:
-                season.append('summer')
-            elif mm in [9,10,11]:
-                season.append('autumn')
-            else:
-                season.append('winter')
+def DrawBasemap(llcrnrlon,llcrnrlat,urcrnrlon,urcrnrlat,hline,vline,shpdic,xticksize=15,
+                yticksize=15,resolution='c',projection='cyl'):
+    u'''
+    该函数用于绘制地图底图
 
-    season[0]=season[1]=None
+    输入参数
+    -------
 
-    syear = year[:]
+    输出值
+    -----
 
-    syear.insert(0,None)
-    syear.insert(0,None)
-    syear.pop()
-    syear.pop()
-
-    dataset = pd.DataFrame({'year':year,'month':month,'season':season,'syear':syear,valuename:Series})
-    dataset = dataset[['year','month','season','syear',valuename]]
-
-    return dataset
-
-
-def DrawBasemap(xticksize=15,yticksize=15,resolution='c'):
     '''
-    Draw a basemap on Qinghai-Tibet Plateau and nearby area with a border of Plateau.
-
-    DrawBasemap(fontsize=16)
-    '''
-    mp = bm.Basemap(llcrnrlon=71.,llcrnrlat=20.,urcrnrlon=108.,
-                    urcrnrlat=45.,resolution=resolution, projection='cyl')
+    mp = bm.Basemap(llcrnrlon=llcrnrlon,llcrnrlat=llcrnrlat,urcrnrlon=urcrnrlon,
+                    urcrnrlat=urcrnrlat,resolution=resolution, projection=projection)
     mp.drawcoastlines(linewidth=0.3)
-    mp.drawparallels(np.array([20,25,30,35,40,45]),
-                     labels=[True,False,False,False],linewidth=0.5,
+    mp.drawparallels(hline,labels=[True,False,False,False],linewidth=0.5,
                      dashes=[1,5],fontsize=yticksize)
-    mp.drawmeridians(np.array([70,75,80,85,90,95,100,105,110]),
-                     labels=[False,False,False,True],linewidth=0.5,
+    mp.drawmeridians(vline,labels=[False,False,False,True],linewidth=0.5,
                      dashes=[1,5],fontsize=xticksize)
-    mp.readshapefile('D:/Dropbox/Research/CloudAboveTibet/Basemaps/'\
-                     'TibetPlateau/DBATP_Line','Tibet',linewidth=2,color='k')
-
-def DrawBasemap_large(xticksize=15,yticksize=15,resolution='h'):
-    '''
-    Draw a basemap on Qinghai-Tibet Plateau and nearby area with a border of Plateau.
-
-    DrawBasemap(fontsize=16)
-    '''
-    mp = bm.Basemap(llcrnrlon=0.,llcrnrlat=0.,urcrnrlon=140.,
-                    urcrnrlat=55.,resolution=resolution, projection='cyl')
-    mp.drawcoastlines(linewidth=0.8)
-    # mp.drawparallels(np.array([0,5,10,15,20,25,30,35,40,45]),
-    #                  labels=[True,False,False,False],linewidth=0.5,
-    #                  dashes=[1,5],fontsize=yticksize)
-    # mp.drawmeridians(np.array([70,75,80,85,90,95,100,105,110]),
-    #                  labels=[False,False,False,True],linewidth=0.5,
-    #                  dashes=[1,5],fontsize=xticksize)
-    mp.readshapefile('D:/Dropbox/Research/CloudAboveTibet/Basemaps/'\
-                     'TibetPlateau/DBATP_Line','Tibet',linewidth=1.5,color='k')
-
-def DrawBasemap_c(xticksize=15,yticksize=15,resolution='c'):
-    '''
-    Draw a basemap on Qinghai-Tibet Plateau and nearby area with a border of Plateau.
-
-    DrawBasemap(fontsize=16)
-    '''
-    mp = bm.Basemap(llcrnrlon=71,llcrnrlat=20.,urcrnrlon=113.,
-                    urcrnrlat=50.,resolution=resolution, projection='cyl')
-    # mp.drawcoastlines(linewidth=0.3)
-    mp.drawparallels(np.array([20,25,30,35,40,45]),
-                     labels=[True,False,False,False],linewidth=0.5,
-                     dashes=[1,5],fontsize=yticksize)
-    mp.drawmeridians(np.array([70,75,80,85,90,95,100,105,110]),
-                     labels=[False,False,False,True],linewidth=0.5,
-                     dashes=[1,5],fontsize=xticksize)
-    mp.readshapefile('D:/Dropbox/Research/CloudAboveTibet/Basemaps/China/bou2_4l',
-                     'China',linewidth=1.2,color='k')
-    # mp.readshapefile('D:/Dropbox/Research/CloudAboveTibet/Basemaps/'\
-    #                  'TibetPlateau/DBATP_Line','Tibet',linewidth=2,color='b')
+    try:
+        mp.readshapefile(shpdic['path'],shpdic['var'],linewidth=2,color='k')
+    except IOError:
+        print u'错误：缺少边界文件或边界文件读取错误，边界加载失败。'
 
 
-def DrawBasemap_s(xticksize=15,yticksize=15):
-    mp = bm.Basemap(llcrnrlon=73,llcrnrlat=23.5,urcrnrlon=105.,
-                    urcrnrlat=41,resolution='c', projection='cyl')
-    # mp.drawcoastlines(linewidth=0.3)
-    mp.drawparallels(np.array([20,25,30,35,40,45]),
-                     labels=[True,False,False,False],linewidth=0.5,
-                     dashes=[1,5],fontsize=yticksize)
-    mp.drawmeridians(np.array([70,75,80,85,90,95,100,105,110]),
-                     labels=[False,False,False,True],linewidth=0.5,
-                     dashes=[1,5],fontsize=xticksize)
-    mp.readshapefile('D:/Dropbox/Research/CloudAboveTibet/Basemaps/'\
-                     'TibetPlateau/DBATP_Line','Tibet',linewidth=1,color='k')
-
-
-def DrawClipedChinaCTF(lon,lat,value,levels,extend,cmap=plt.cm.RdYlBu,lineSwitch=True):
-    lons,lats = np.meshgrid(lon,lat)
-    fig = plt.figure(figsize=(10,10))
-    ax = fig.add_subplot(111)
-
-    DrawBasemap_c()
-    
-    ctrf = plt.contourf(lons,lats,value,levels=levels,cmap=cmap,extend=extend)
-    ClipChina(ctrf,ax)
-    
-    if lineSwitch:
-        ctr = plt.contour(lons,lats,value,levels=levels,colors='k',linewidths=0.4)
-        ClipChina(ctr,ax)
-        
-    cax = fig.add_axes([0.175,0.3,0.4,0.027])
-    cb = fig.colorbar(ctrf,orientation='horizontal',cax=cax,ticks=levels[::3])
-    cb.ax.tick_params(labelsize=13)
-
-    # fig.text(0.5, 0.21, '$Longitude$', ha='center',fontsize=22)
-    # fig.text(0.02, 0.5, '$Latitude$', 
-    #      va='center', rotation='vertical',fontsize=22)
-
-def DrawClipedTibetCTR(lon,lat,value,levels,cmap=plt.cm.RdYlBu,lineSwitch=True):
-    lons,lats = np.meshgrid(lon,lat)
-    fig = plt.figure(figsize=(10,10))
-    ax = fig.add_subplot(111)
-    DrawBasemap_s()
-    ctrf = plt.contourf(lons,lats,value,levels=levels,cmap=cmap)
-    if lineSwitch:
-        ctr = plt.contour(lons,lats,value,levels=levels,colors='k',linewidths=0.3)
-        ClipTibet(ctr,ax)
-    ClipTibet(ctrf,ax)
-    cax = fig.add_axes([0.16, 0.32, 0.025, 0.25])
-    cb = fig.colorbar(ctrf,cax)
-    cb.ax.tick_params(labelsize=14)
-
-def Draw4ContourSubplots(lon,lat,value,levels=np.arange(0,401,40),
-                         colors=['#FFFFFF','#DDDDDD','#AAAAAA','#888888','#666666'],
-                         extend='both',labels=['a','b','c','d'],
-                         lineSwitch=True):
+def Draw4ContourSubplots(lon,lat,arrdic,levels,extend='both',labels=['a','b','c','d'],
+                         lineSwitch=True,cmap=None):
     '''
     Draw a 4-subplots Co
-    value should be a dictionary with keys of {'spring','summer','autumn','winter'}
+    arrdic should be a dictionary with keys of {'spring','summer','autumn','winter'}
     '''
+    colors=['#FFFFFF','#DDDDDD','#AAAAAA','#888888','#666666']
     lons,lats = np.meshgrid(lon,lat)
     season = ['spring','summer','autumn','winter']
     fig = plt.figure(figsize=(11,8),dpi=1000)
@@ -374,33 +235,33 @@ def Draw4ContourSubplots(lon,lat,value,levels=np.arange(0,401,40),
         if i == 0:
             DrawBasemap(xticksize=0)
             # SubplotLabel(labels[i])
-            ctrf = plt.contourf(lons,lats,value[n],levels=levels,colors=colors,extend=extend)
+            ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,colors=colors,extend=extend)
             if lineSwitch:
-                ctr = plt.contour(lons,lats,value[n],
+                ctr = plt.contour(lons,lats,arrdic[n],
                                   levels=levels,colors='k',
                                  linewidths=0.5)
         elif i==2:
             DrawBasemap()
             # SubplotLabel(labels[i])
-            ctrf = plt.contourf(lons,lats,value[n],levels=levels,colors=colors,extend=extend)
+            ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,colors=colors,extend=extend)
             if lineSwitch:
-                ctr = plt.contour(lons,lats,value[n],
+                ctr = plt.contour(lons,lats,arrdic[n],
                                   levels=levels,colors='k',
                                  linewidths=0.5)
         elif i==3:
             DrawBasemap(yticksize=0)
             # SubplotLabel(labels[i])
-            ctrf = plt.contourf(lons,lats,value[n],levels=levels,colors=colors,extend=extend)
+            ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,colors=colors,extend=extend)
             if lineSwitch:
-                ctr = plt.contour(lons,lats,value[n],
+                ctr = plt.contour(lons,lats,arrdic[n],
                                   levels=levels,colors='k',
                                  linewidths=0.5)
         else:
             DrawBasemap(xticksize=0,yticksize=0)
             # SubplotLabel(labels[i])
-            ctrf = plt.contourf(lons,lats,value[n],levels=levels,colors=colors,extend=extend)
+            ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,colors=colors,extend=extend)
             if lineSwitch:
-                ctr = plt.contour(lons,lats,value[n],
+                ctr = plt.contour(lons,lats,arrdic[n],
                                   levels=levels,colors='k',
                                  linewidths=0.5)
 
@@ -659,28 +520,26 @@ def SelectRegion(arr,pdDF,lon,lat):
 
     return np.ma.masked_equal(newarr,-9999.)
 
-def Smooth(data,lon,lat,zoom=3):
-    
-    data = scipy.ndimage.zoom(data,zoom)
-    slat = np.linspace(lat[0],lat[-1],data.shape[0])
-    slon = np.linspace(lon[0],lon[-1],data.shape[1])
-    
-    return (data,slon,slat)
+def Smooth(lon,lat,arr,zoom=3):
+    u'''
+    该函数用于对空间二维数组进行插值平滑处理
 
+    输入参数
+    -------
+    lon : 
+    lat :
+    arr :
+    zoom :
 
-def SubplotLabel(string,left=72,right=76.5,lower=40.5,upper=43.5,fontsize=20,zorder=3):
+    输出值
+    -----
+    (sarr,slon,slat) : 
     '''
-    Draw a white background of labels on a map.
-    SubplotLabel(string,left=72,right=76.5,lower=40.5,upper=43.5,zorder=3)
-    '''
-    lower_left = (left, lower)
-    lower_right= (right, lower)
-    upper_left = (left, upper)
-    upper_right= (right, upper)
-    p = Polygon([lower_left,upper_left,upper_right,lower_right],
-        facecolor='w',linewidth=0,zorder=zorder) 
-    plt.gca().add_patch(p)
-    plt.text(72.5,41.5,string,fontsize=fontsize)
+    sarr = scipy.ndimage.zoom(arr,zoom)
+    slat = np.linspace(lat[0],lat[-1],arr.shape[0])
+    slon = np.linspace(lon[0],lon[-1],arr.shape[1])
+    
+    return (sarr,slon,slat)
 
 
 def TrendArray(value):
