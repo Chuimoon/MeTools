@@ -83,14 +83,14 @@ def AnnualMeanArray(arr):
 
     示例
     ----
-    示例数据为16年192个月的温度数据（temp），其维度分布为 (月份:192, 纬度:180, 经度:360)：
+    #示例数据为16年192个月的温度数据（temp），其维度分布为 (月份:192, 纬度:180, 经度:360)：
     In [1] : temp.shape
     Out [1] : (192, 180, 360)
     
-    使用本函数计算得到年平均数组
+    #使用本函数计算得到年平均数组
     In [2] : annual_mean_array = AnnualMeanArray(temp)
 
-    年平均数组的时间维降为16，即16年（192/12=16)
+    #年平均数组的时间维降为16，即16年（192/12=16)
     In [3] : annual_mean_array.shape
     Out [3] : (16, 180, 360)
     '''
@@ -103,32 +103,44 @@ def AnnualMeanArray(arr):
 
 
 def Corref(x,y):
-    '''
-    This function will return a correlation coefficient of 2 one-dimension series.
+    u'''
+    该函数用于计算两个相同长度一维数组的相关系数
 
-    Parameters
-    ----------
-    x : a one-dimension list or ndarray
-        The first series.
-    y : a one-dimension list or ndarray
-        The second series.
-
-    Returns
+    输入参数
     -------
-    coef : a float number
-        The linear correlation coefficient
+    x : 一维数组
+        第一个一维数组
+    y : 一维数组
+        第二个一维数组
 
-    Log
-    ---
-    Prg Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
-    Doc Created by Clarmy 2018/06/15  clarmylee92510@gmail.com  https://github.com/Clarmy
+    返回值
+    -----
+    coef : 浮点数
+        返回两个输入数组的线性相关系数，若返回值为-9999，则说明输入的两个数组中至少有一个数组异常，例如:
+
+        In [1]: Corref([1,2,3],[2,2,2])
+        Out [1]: -9999.0
+
+        该处理方法用于处理数组中存在缺省值的情况
     '''
-    try:
-        int(np.corrcoef(x,y)[0,1])
-    except ValueError:
-        return -9999.0
+    xshape = np.array(x).shape
+    yshape = np.array(y).shape
+    if len(xshape) != 1:
+        print u'错误：x数组不是一维数组'
+        exit()
+    elif len(yshape) != 1:
+        print u'错误：y数组不是一维数组'
+        exit()
+    elif xshape == yshape:
+        try:
+            int(np.corrcoef(x,y)[0,1])  #判断所得结果是否可数字化，若结果为nan则无法数字化将按异常处理
+        except ValueError:              #若得到nan则以-9999作为返回值
+            return -9999.0
+        else:
+            return np.corrcoef(x,y)[0,1]
     else:
-        return np.corrcoef(x,y)[0,1]
+        print u'错误：两个数组不等长'
+        exit()
 
 
 def ClipBoundary(ctrf,ax,region='China'):
