@@ -214,38 +214,28 @@ def DrawBasemap(llcrnrlon,llcrnrlat,urcrnrlon,urcrnrlat,hline,vline,shpdic,xtick
 
     llcrnrlon : 浮点数
         左下角经度值，llcrnrlon是lower-left-corner-longitude的缩写
-
     llcrnrlat : 浮点数
         左下角纬度值，llcrnrlat是lower-left-corner-latitude的缩写
-
     urcrnrlon : 浮点数
         右上角经度值，urcrnrlon是upper-right-corner-longitude的缩写
-
     urcrnrlat : 浮点数
         右上角纬度值，urcrnrlat是upper-right-corner-latitude的缩写
-
     xlines : 一维数组
         在地图上叠加纬向网格线的纬度坐标
-
     ylines : 一维数组
         在地图上叠加经向网格线的经度坐标
-
     shpdic : 字典
         包含"path"和"var"两个键，分别对应边界文件(shapefile)的路径和选取区域的名称
-
     xticksize : 浮点数 | 默认值为15
         底部经度标签的字体大小
-
     yticksize : 浮点数 | 默认值为15
         左侧纬度标签的字体大小
-
     resolution : 字符串 | 默认值为'c'
         底图的分辨率，须从以下字符串中选取：
             'c' ----- 粗糙（coarse）
             'i' -----
             'm' -----
             'f' ----- 完整（full)
-
     projection : 字符串 | 默认值为'cyl'
         投影类型，须从以下字符串中选取：
             'cyl'   --------   圆柱形投影
@@ -268,50 +258,93 @@ def DrawBasemap(llcrnrlon,llcrnrlat,urcrnrlon,urcrnrlat,hline,vline,shpdic,xtick
 
 
 def Draw4ContourSubplots(lon,lat,arrdic,levels,extend='both',labels=['a','b','c','d'],
-                         lineSwitch=True,cmap=None):
-    '''
-    Draw a 4-subplots Co
-    arrdic should be a dictionary with keys of {'spring','summer','autumn','winter'}
+                         lineSwitch=True,cmap=None,figsize=(11,8),dpi=600,linewidths=0.5):
+    u'''
+    该函数用于绘制一个由四个等值线子图组成的图
+
+    输入参数
+    -------
+    lon : 一维数组
+        经度的一维数组
+    lat : 一维数组
+        纬度的一维数组
+    arrdic : 字典
+        须含有'a','b','c','d'四个键，每个键映射的值为每个子图相对应的二维数组
+    levels : 一维数组
+        用于设置等值线的层级数组
+    extend : 字符串 | 默认值为'both'
+        用于设置等值线及色标柱中对超出levels部分的表示方式，须在'neither', 'both', 'max', 'min'中选择，
+        其含义分别为：
+            neither ---- 低于色标层级最小值或高于色标层级最大值部分不予显示
+            both    ---- 低于色标层级最小值或高于色标层级最大值部分都允许显示
+            max     ---- 仅高于色标层级最大值的允许显示
+            min     ---- 仅低于色标层级最小值的允许显示
+    labels : 字符串列表 | 默认值为['a','b','c','d']
+        用于设置四个子图相应的名称
+    lineSwitch : 布尔值 | 默认值为Ture
+        线条开关，若该值为True，则显示等值线条，若为False，则不显示等值线条
+    cmap : 色标对象 | 默认值为None
+        用于设置彩图的色标，可用plt.cm.方法调取，例如 cmap = plt.cm.Blues，当cmap为None时，程序会按照
+        5阶黑白配色出图
+    figsize : 二维元组 或 二维列表 | 默认值为(11,8)
+        用于设置总图片的长宽
+    dpi : 整数 | 默认值为600
+        用于设置位图图片的分辨率，位图dpi设为600已能达到出版要求的清晰度
+    linewidths : 浮点数 | 默认值为0.5
+        当lineSwitch为True时，用于设置等值线条的线宽
+
+    输出值
+    -----
+    无
+
     '''
     colors=['#FFFFFF','#DDDDDD','#AAAAAA','#888888','#666666']
     lons,lats = np.meshgrid(lon,lat)
-    season = ['spring','summer','autumn','winter']
-    fig = plt.figure(figsize=(11,8),dpi=1000)
-    for i,n in enumerate(season):
+    diclabels = ['a','b','c','d']
+    fig = plt.figure(figsize=figsize,dpi=dpi)
+    for i, n in enumerate(diclabels):
         plt.subplot(2,2,i+1)
         plt.title(labels[i])
         if i == 0:
             DrawBasemap(xticksize=0)
-            # SubplotLabel(labels[i])
-            ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,colors=colors,extend=extend)
+            if cmap :
+                ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,cmap=cmap,extend=extend)
+            else:
+                levels5 = np.round(np.linspace(levels[0],levels[-1],4),2)
+                ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels5,colors=colors,extend=extend)
             if lineSwitch:
-                ctr = plt.contour(lons,lats,arrdic[n],
-                                  levels=levels,colors='k',
-                                 linewidths=0.5)
+                ctr = plt.contour(lons,lats,arrdic[n],levels=levels,colors='k',
+                    linewidths=linewidths)
         elif i==2:
             DrawBasemap()
-            # SubplotLabel(labels[i])
-            ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,colors=colors,extend=extend)
+            if cmap :
+                ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,cmap=cmap,extend=extend)
+            else:
+                levels5 = np.round(np.linspace(levels[0],levels[-1],4),2)
+                ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels5,colors=colors,extend=extend)
             if lineSwitch:
-                ctr = plt.contour(lons,lats,arrdic[n],
-                                  levels=levels,colors='k',
-                                 linewidths=0.5)
+                ctr = plt.contour(lons,lats,arrdic[n],levels=levels,colors='k',
+                    linewidths=linewidths)
         elif i==3:
             DrawBasemap(yticksize=0)
-            # SubplotLabel(labels[i])
-            ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,colors=colors,extend=extend)
+            if cmap :
+                ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,cmap=cmap,extend=extend)
+            else:
+                levels5 = np.round(np.linspace(levels[0],levels[-1],4),2)
+                ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels5,colors=colors,extend=extend)
             if lineSwitch:
-                ctr = plt.contour(lons,lats,arrdic[n],
-                                  levels=levels,colors='k',
-                                 linewidths=0.5)
+                ctr = plt.contour(lons,lats,arrdic[n],levels=levels,colors='k',
+                    linewidths=linewidths)
         else:
             DrawBasemap(xticksize=0,yticksize=0)
-            # SubplotLabel(labels[i])
-            ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,colors=colors,extend=extend)
+            if cmap :
+                ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels,cmap=cmap,extend=extend)
+            else:
+                levels5 = np.round(np.linspace(levels[0],levels[-1],4),2)
+                ctrf = plt.contourf(lons,lats,arrdic[n],levels=levels5,colors=colors,extend=extend)
             if lineSwitch:
-                ctr = plt.contour(lons,lats,arrdic[n],
-                                  levels=levels,colors='k',
-                                 linewidths=0.5)
+                ctr = plt.contour(lons,lats,arrdic[n],levels=levels,colors='k',
+                    linewidths=linewidths)
 
     cax = fig.add_axes([0.2, 0.05, 0.6, 0.03])
     fig.colorbar(ctrf,cax,orientation='horizontal',ticks=levels)
