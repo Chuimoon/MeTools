@@ -23,22 +23,31 @@ months = ['Jan.','Feb.','Mar.','Apr.','May','Jun.','Jul.','Aug.','Sep.','Oct.','
 
 def AdjustColormap(cmap, minval=0.0, maxval=1.0, n=100):
     u'''
-    This function can intercept an existing colormap and return a new colormap objection. 
+    该函数用于截取已有色标(colormap)的片段
 
-    Parameters
-    ----------
-    cmap : a cmap objection
-        It is the existing colormap for intercepting.
-    minval : a float digit between 0 and 1
-        It is the leftmost position of new colormap to create, minval must be less than maxval.
-    maxval : a float digit between 0 and 1
-        It is the rightmost position of new colormap to create, maxval must be greater than minval.
-    n : a integer digit
-        It is the amount of interval of new colormap to create.
-
-    Returns
+    输入参数
     -------
-    new_cmap : a cmap objection
+    cmap : colormap对象
+        该参数传入待截取的colormap对象
+
+    minval : 浮点数 | 默认值为0
+        截取片段的左边界，该数值须在0-1之间，且小于maxval
+
+    maxval : 浮点数 | 默认值为1
+        截取片段的右边界，该数值须在0-1之间，且大于minval
+
+    n : 整数 | 默认值为100
+        新色标的阶数
+
+    返回值
+    -----
+    new_cmap : colormap对象
+        截取后得到的colormap对象
+
+    示例
+    ----
+    In[1] : old_cmap = plt.cm.Blues
+    In[2] : new_cmap = AdjustColormap(old_cmap,0.2,0.8)
 
     '''
     new_cmap = colors.LinearSegmentedColormap.from_list(
@@ -102,7 +111,7 @@ def AnnualMeanArray(arr):
     return ann_arr  
 
 
-def Corref(x,y):
+def CorrCoef(x,y):
     u'''
     该函数用于计算两个相同长度一维数组的相关系数
 
@@ -110,6 +119,7 @@ def Corref(x,y):
     -------
     x : 一维数组
         第一个一维数组
+
     y : 一维数组
         第二个一维数组
 
@@ -118,7 +128,7 @@ def Corref(x,y):
     coef : 浮点数
         返回两个输入数组的线性相关系数，若返回值为-9999，则说明输入的两个数组中至少有一个数组异常，例如:
 
-        In [1]: Corref([1,2,3],[2,2,2])
+        In [1]: CorrCoef([1,2,3],[2,2,2])
         Out [1]: -9999.0
 
         该处理方法用于处理数组中存在缺省值的情况
@@ -202,21 +212,59 @@ def DrawBasemap(llcrnrlon,llcrnrlat,urcrnrlon,urcrnrlat,hline,vline,shpdic,xtick
     输入参数
     -------
 
+    llcrnrlon : 浮点数
+        左下角经度值，llcrnrlon是lower-left-corner-longitude的缩写
+
+    llcrnrlat : 浮点数
+        左下角纬度值，llcrnrlat是lower-left-corner-latitude的缩写
+
+    urcrnrlon : 浮点数
+        右上角经度值，urcrnrlon是upper-right-corner-longitude的缩写
+
+    urcrnrlat : 浮点数
+        右上角纬度值，urcrnrlat是upper-right-corner-latitude的缩写
+
+    xlines : 一维数组
+        在地图上叠加纬向网格线的纬度坐标
+
+    ylines : 一维数组
+        在地图上叠加经向网格线的经度坐标
+
+    shpdic : 字典
+        包含"path"和"var"两个键，分别对应边界文件(shapefile)的路径和选取区域的名称
+
+    xticksize : 浮点数 | 默认值为15
+        底部经度标签的字体大小
+
+    yticksize : 浮点数 | 默认值为15
+        左侧纬度标签的字体大小
+
+    resolution : 字符串 | 默认值为'c'
+        底图的分辨率，须从以下字符串中选取：
+            'c' ----- 粗糙（coarse）
+            'i' -----
+            'm' -----
+            'f' ----- 完整（full)
+
+    projection : 字符串 | 默认值为'cyl'
+        投影类型，须从以下字符串中选取：
+            'cyl'   --------   圆柱形投影
+
     输出值
     -----
-
+    无
     '''
     mp = bm.Basemap(llcrnrlon=llcrnrlon,llcrnrlat=llcrnrlat,urcrnrlon=urcrnrlon,
                     urcrnrlat=urcrnrlat,resolution=resolution, projection=projection)
     mp.drawcoastlines(linewidth=0.3)
-    mp.drawparallels(hline,labels=[True,False,False,False],linewidth=0.5,
+    mp.drawparallels(xlines,labels=[True,False,False,False],linewidth=0.5,
                      dashes=[1,5],fontsize=yticksize)
-    mp.drawmeridians(vline,labels=[False,False,False,True],linewidth=0.5,
+    mp.drawmeridians(ylines,labels=[False,False,False,True],linewidth=0.5,
                      dashes=[1,5],fontsize=xticksize)
     try:
         mp.readshapefile(shpdic['path'],shpdic['var'],linewidth=2,color='k')
     except IOError:
-        print u'错误：缺少边界文件或边界文件读取错误，边界加载失败。'
+        print u'错误：缺少边界文件或边界文件读取时出错，边界加载失败。'
 
 
 def Draw4ContourSubplots(lon,lat,arrdic,levels,extend='both',labels=['a','b','c','d'],
@@ -352,7 +400,7 @@ def Draw4RegressSubplots(x,data,keys,ylim,ylabel='Y-axis',xlabel='X-axis',sublab
     for i,n in enumerate(keys):
         plt.subplot(2,2,i+1)
         plt.plot(x,data[n],'b',linewidth=1.5)
-        p = LineRegression(x,data[n])
+        p = LinearRegFunc(x,data[n])
         plt.plot(x,p(x),'r--',linewidth=1.5)
         plt.scatter(x,data[n],color='b')
         plt.text(x[0],(ylim[1]-ylim[0])*0.85+ylim[0],sublabels[i],fontsize=20)
@@ -369,7 +417,7 @@ def Draw4RegressSubplots(x,data,keys,ylim,ylabel='Y-axis',xlabel='X-axis',sublab
             plt.xticks(fontsize=0)
             
         print '\nTrend of '+n+' is ',round(TrendRate(x,data[n]),4)
-        print 'Coer of '+n+' is ',round(Corref(x,data[n]),4)
+        print 'Coer of '+n+' is ',round(CorrCoef(x,data[n]),4)
             
     fig.text(0.5, 0.05, xlabel, ha='center',fontsize=20)
     fig.text(0.06, 0.5, ylabel, 
@@ -392,7 +440,7 @@ def Draw12RegressSubplots(x,y,ylim,xlabel='x-axis',
         plt.scatter(x,y[i+1],color='b')  #在折线折点上叠加画上实心圆点
         plt.text(x[0],(ylim[1]-ylim[0])*0.85+ylim[0],labels[i],fontsize=20)
 
-        p = LineRegression(x,y[i+1])
+        p = LinearRegFunc(x,y[i+1])
         plt.plot(x,p(x),'r--',linewidth=1.5)  #画趋势线
 
         plt.xlim(2000.5,2016.5)  #调节x轴范围
@@ -408,7 +456,7 @@ def Draw12RegressSubplots(x,y,ylim,xlabel='x-axis',
             plt.yticks(fontsize=0)
 
         print '\nTrend of '+labels[i]+' is ',round(TrendRate(x,y[i+1]),4)
-        print 'Coer of '+labels[i]+' is ',round(Corref(x,y[i+1]),4)
+        print 'Coer of '+labels[i]+' is ',round(CorrCoef(x,y[i+1]),4)
 
     plt.subplots_adjust(wspace = 0.02,hspace = 0.05)
 
@@ -417,34 +465,85 @@ def Draw12RegressSubplots(x,y,ylim,xlabel='x-axis',
              va='center', rotation='vertical',fontsize=20)
 
 
-def DrawColorbar(im,pad='6%',fontsize=15):
-    divider = make_axes_locatable(plt.gca())
-    cax = divider.append_axes('bottom', '5%', pad=pad)
-    cb = plt.colorbar(im,orientation='horizontal',cax=cax)
-    cb.ax.tick_params(labelsize=fontsize)
-
-def LineRegression(x,y):
+def DrawColorbar(im,pad='6%',fontsize=15,orien='h'):
+    u'''
+    该函数用于绘制
     '''
-    Return a regression expression function.
+    if orien == 'h':
+        divider = make_axes_locatable(plt.gca())
+        cax = divider.append_axes('bottom', '5%', pad=pad)
+        cb = plt.colorbar(im,orientation='horizontal',cax=cax)
+        cb.ax.tick_params(labelsize=fontsize)
+    elif orien == 'v':
+        divider = make_axes_locatable(plt.gca())
+        cax = divider.append_axes('right', '5%', pad=pad)
+        cb = plt.colorbar(im,cax=cax)
+        cb.ax.tick_params(labelsize=fontsize)
+    else:
+        print u'错误：orien参数必须是‘h’或‘v’'
 
-    Regression(x,y,n)
-    x: 1 dimension data on x axis and it's length must be same as y.
-    y: 1 dimension data on y axis and it's length must be same as x.
+def LinearRegFunc(x,y):
+    u'''
+    该函数用于通过对两个一维数组x、y的线性拟合获取其拟合函数
 
-    example:
+    输入参数
+    -------
+    x : 一维数组
+    y : 一维数组
+
+    返回值
+    -----
+    p : 函数对象
+        通过拟合计算得到的函数对象，对其输入参数x可以获得拟合后相应的y0
+
+    示例
+    ----
     In[1] :a = [1,2,3,4,5]
     In[2] :b = [23.4,23.2,84.3,35.6,28.9]
 
-    In[3] :f = LineRegression(a,b)
+    In[3] :f = LinearRegFunc(a,b)
 
     In[4] :f(a)
-    Out[2]:array([ 34.4 ,  36.74,  39.08,  41.42,  43.76])
+    Out[4]:array([ 34.4 ,  36.74,  39.08,  41.42,  43.76])
 
     '''
-    z = np.polyfit(x,y,1)
-    p = np.poly1d(z)
-    return p
+    if len(np.array(x).shape) == len(np.array(y).shape) == 1:   # 检查两个参数是否都是一维数组
+        if len(x) == len(y):                # 确定两个参数都是一维数组以后检查两个参量是否一样长
+                z = np.polyfit(x,y,1)
+                p = np.poly1d(z)
+                return p
+        else:
+            print u'错误：x和y长度不一样'
+            exit()
+    else:
+        print u'错误：x或y不是一维数组'
+        exit()
 
+def LinearTrendRate(x,y):
+    u'''
+    该函数用于计算两组一维数组x、y的线性趋势（线性拟合斜率）
+
+    输入参数
+    -------
+    x : 一维数组
+    y : 一维数组
+        须与x数组长度相同
+
+    返回值
+    -----
+    ltr : 浮点数
+        线性趋势斜率值
+    '''
+    if len(np.array(x).shape) == len(np.array(y).shape) == 1:   # 检查两个参数是否都是一维数组
+        if len(x) == len(y):                # 确定两个参数都是一维数组以后检查两个参量是否一样长
+            ltr = np.polyfit(x,y,1)[0]      # 确定两个数组一样长以后计算线性拟合斜率
+            return ltr
+        else:
+            print u'错误：x和y长度不一样'
+            exit()
+    else:
+        print u'错误：x或y不是一维数组'
+        exit()
 
 def Monthlize(data,dicSwitch=True):
     months = ['Jan.','Feb.','Mar.','Apr.','May','Jun.','Jul.','Aug.','Sep.','Oct.','Nov.','Dec.']
@@ -526,20 +625,28 @@ def Smooth(lon,lat,arr,zoom=3):
 
     输入参数
     -------
-    lon : 
-    lat :
-    arr :
-    zoom :
-
+    lon : 一维数组
+        经度数组
+    lat : 一维数组
+        纬度数组
+    arr : 二维数组
+        二维空间数组
+    zoom : 整数 | 默认值为3
+        插值倍数
     输出值
     -----
-    (sarr,slon,slat) : 
+    (slon,slat,sarr) : (一维数组，一维数组，二维数组)
+        平滑插值处理后得到的(经度数组，纬度数组，二维空间数组）
+
+    示例
+    ----
+    
     '''
     sarr = scipy.ndimage.zoom(arr,zoom)
     slat = np.linspace(lat[0],lat[-1],arr.shape[0])
     slon = np.linspace(lon[0],lon[-1],arr.shape[1])
     
-    return (sarr,slon,slat)
+    return (slon,slat,sarr)
 
 
 def TrendArray(value):
@@ -553,11 +660,31 @@ def TrendArray(value):
 
     return regression
 
-def TrendRate(x,y):
+def LinearTrendRate(x,y):
+    u'''
+    该函数用于计算两组一维数组x、y的线性趋势（线性拟合斜率）
+
+    输入参数
+    -------
+    x : 一维数组
+    y : 一维数组
+        须与x数组长度相同
+
+    返回值
+    -----
+    ltr : 浮点数
+        线性趋势斜率值
     '''
-    Return a linear trend rate of y-axis data with y-axis data.
-    '''
-    return np.polyfit(x,y,1)[0]
+    if len(np.array(x).shape) == len(np.array(y).shape) == 1:   # 检查两个参数是否都是一维数组
+        if len(x) == len(y):                # 确定两个参数都是一维数组以后检查两个参量是否一样长
+            ltr = np.polyfit(x,y,1)[0]      # 确定两个数组一样长以后计算线性拟合斜率
+            return ltr
+        else:
+            print u'错误：x和y长度不一样'
+            exit()
+    else:
+        print u'错误：x或y不是一维数组'
+        exit()
 
 
 def Unpack(Obj):
@@ -572,7 +699,7 @@ def CoefArray(value):
 
     for iy in xrange(shape[0]):
         for ix in xrange(shape[1]):
-            coef[iy,ix] = Corref(x,value[:,iy,ix])
+            coef[iy,ix] = CorrCoef(x,value[:,iy,ix])
 
     return coef
 
