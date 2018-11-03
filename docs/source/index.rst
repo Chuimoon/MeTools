@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to MeTools's documentation!
+欢迎来到 MeTools 文档指南!
 ===================================
 
 .. toctree::
