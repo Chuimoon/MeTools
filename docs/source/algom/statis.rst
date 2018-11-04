@@ -5,16 +5,18 @@ statis
 .. py:function:: array_area_mean(arr,fill_value=None)
   :module: algom.statis
 
-  该函数会将一个包含时间维的三维数组通过空间平均计算降维成一个一维时间序列。
+  计算区域平均
+  该函数将计算空间数组的区域平均值
 
   :param numpy.ndarray arr:
-    待处理的原始三维数组，其第一维须为时间维。
+    待处理的原始数组，该数组的维度至少为2，若数组维度大于2，则其最右侧的两个维度须为经纬坐标，如(time,lat,lon)
 
-  :param float fill_value:
-    数据缺省值。
+  :param fill_value:
+    数据缺省值，若数据中存在缺省，请将该参数赋值为缺省值，否则计算得到的数据为虚假数据。
+  :type fill_value: None, float or int
 
   :return:
-    经过计算后得到代表区域平均的一维时间序列。
+    经过计算后得到的区域平均数组，其维数将比原始数组少2。
 
   :rtype: numpy.ndarray
 

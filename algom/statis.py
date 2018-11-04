@@ -6,20 +6,22 @@ import numpy as np
 
 def array_area_mean(arr,fill_value=None):
     '''
-    该函数会将一个包含时间维的三维数组通过空间平均计算，降维成一个一维时间序列。
+    计算区域平均
+    该函数将计算空间数组的区域平均值
 
     输入参数
     -------
-    arr : 三维数组  `numpy.ndarray`
-        该数组为待处理的原始三维数组，其第一维须为时间维，类型须为ndarray。
+    arr : `numpy.ndarray`
+        待处理的原始数组，该数组的维度至少为2，若数组维度大于2，则其最右侧的两个维度须为
+        经纬坐标，如(time,lat,lon)
 
-    fill_value : 浮点数 `fload`
-        数据缺省值，若输入数组中存在缺省值，则将该参数须设置为相应的缺省值
+    fill_value : `float` | `int` | `None`
+        数据缺省值，若数据中存在缺省，请将该参数赋值为缺省值，否则计算得到的数据为虚假数据
 
     返回值
     -----
-    一维数组  `numpy.ndarray`
-        该数组为经过计算后得到的一维区域平均数组
+    `numpy.ndarray`
+        经过计算后得到的区域平均数组，其维数将比原始数组少2。
 
     示例
     ---
@@ -75,10 +77,26 @@ def array_area_mean(arr,fill_value=None):
             183.84408836,  191.18815922,  154.25274534,  137.73323471])
 
     '''
-    if fill_value:
-        arr = np.ma.masked_equal(arr,fill_value)
+    shape = arr.shape
+    ndim = len(shape)
+    if fill_value and type(fill_value) not in [float,int]:
+        raise ValueError('Parameter fill_value should be a float, int or None.')
+    if ndim < 2:
+        raise ValueError('Parameter arr\'s number of dimension should be >= 2.')
+    elif ndim == 2:
+        if fill_value:
+            arr = np.ma.masked_equal(arr,fill_value)
+            result = np.ma.mean(arr)
+        else:
+            result = np.mean(arr)
+    else:
+        if fill_value:
+            arr = np.ma.masked_equal(arr,fill_value)
+            result = np.array(np.ma.mean(np.ma.mean(arr,axis=-1),axis=-1))
+        else:
+            result = np.mean(np.mean(arr,axis=-1),axis=-1)
 
-    return np.array(np.mean(np.mean(arr,axis=1),axis=1))
+    return result
 
 
 def array_annual_mean(arr,fill_value=None):
@@ -189,7 +207,7 @@ def array_smooth(lon,lat,arr,zoom=3):
     -----
     (slon,slat,sarr) : (一维数组，一维数组，二维数组) `tumple`
         平滑插值处理后得到的(经度数组，纬度数组，二维空间数组）
-        
+
     '''
     sarr = scipy.ndimage.zoom(arr,zoom)
     slat = np.linspace(lat[0],lat[-1],sarr.shape[0])
